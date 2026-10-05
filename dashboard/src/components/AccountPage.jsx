@@ -20,7 +20,7 @@ const CANCELLABLE_STATES = ['active', 'trialing', 'past_due'];
 
 // Account/billing page: plan, usage meter, top-ups, manage billing, logout.
 export default function AccountPage() {
-  const { me, refreshMe, logout, plan, minutes } = useAuth();
+  const { me, refreshMe, logout, plan, minutes, planLocked } = useAuth();
   const [busy, setBusy] = useState(false);
   const [topups, setTopups] = useState([]);
   const [activating, setActivating] = useState(false);
@@ -159,7 +159,7 @@ export default function AccountPage() {
             <button onClick={openPortal} disabled={busy} className="btn-ghost px-4 py-2 shrink-0">
               <CreditCard size={16} /> Manage billing
             </button>
-          ) : (
+          ) : planLocked ? null : (
             <button onClick={() => { window.location.hash = '#/pricing'; }} className="btn-primary px-4 py-2 shrink-0 text-xs">
               Upgrade
             </button>
@@ -182,6 +182,9 @@ export default function AccountPage() {
           </div>
         )}
 
+        {planLocked ? (
+          <p className="text-sm text-muted lowercase">Unlimited minutes — no billing on this server.</p>
+        ) : (
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted lowercase">Plan minutes</span>
@@ -199,6 +202,7 @@ export default function AccountPage() {
             <span className="text-brass font-medium">{fmt1(m.remaining)} min</span>
           </div>
         </div>
+        )}
 
         {/* Our own cancel flow (reason + review + retention offer). The portal
             cannot cancel (turned off in Stripe), so this is the only way out. */}

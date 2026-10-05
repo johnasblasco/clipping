@@ -31,6 +31,11 @@ function PageShell({ title, children }) {
 
 function PricingView() {
   const [showLogin, setShowLogin] = useState(false);
+  const { planLocked, loading } = useAuth();
+  useEffect(() => {
+    if (!loading && planLocked) window.location.hash = '#app';
+  }, [loading, planLocked]);
+  if (planLocked) return null;
   return (
     <PageShell>
       <PricingPage onRequireLogin={() => setShowLogin(true)} />
@@ -40,10 +45,10 @@ function PricingView() {
 }
 
 function AccountView() {
-  const { isSignedIn, loading } = useAuth();
+  const { isSignedIn, loading, planLocked } = useAuth();
   useEffect(() => {
-    if (!loading && !isSignedIn) window.location.hash = '#/pricing';
-  }, [loading, isSignedIn]);
+    if (!loading && !isSignedIn) window.location.hash = planLocked ? '#app' : '#/pricing';
+  }, [loading, isSignedIn, planLocked]);
   return <PageShell><AccountPage /></PageShell>;
 }
 

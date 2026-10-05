@@ -27,6 +27,15 @@ PLAN_MINUTES = {
     "pro": 750,
 }
 
+# Forced plan: every signed-in account gets this plan with no Stripe
+# subscription, no pricing pages and no quota wall. Defaults to "pro" in this
+# fork; set FORCE_PLAN="" to restore the normal paid/free plan logic.
+FORCE_PLAN = os.environ.get("FORCE_PLAN", "pro").strip().lower() or None
+if FORCE_PLAN not in PLAN_MINUTES:
+    FORCE_PLAN = None
+# Monthly minute allowance under FORCE_PLAN (effectively unlimited).
+FORCE_PLAN_MINUTES = int(os.environ.get("FORCE_PLAN_MINUTES", "1000000"))
+
 # Free plan: monthly allowance for Google-authenticated users with no
 # subscription. No Stripe object exists for it — it is resolved entirely in
 # cloud/metering.py against a synthetic calendar-month period. Setting

@@ -138,6 +138,8 @@ export function AuthProvider({ children }) {
 
   const value = {
     billingEnabled: config.billingEnabled,
+    // Every account is on a fixed plan: hide pricing, upgrade and top-up UI.
+    planLocked: !!config.planLocked,
     localLlm: config.localLlm || null,
     googleAuthEnabled: config.googleAuthEnabled,
     jobRetentionSeconds: config.jobRetentionSeconds || null,

@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 // Header avatar + dropdown for signed-in cloud users: shows the email and gives
 // access to Account & billing (manage subscription, top-ups) and Sign out.
 export default function ProfileMenu() {
-  const { user, isManaged, logout } = useAuth();
+  const { user, isManaged, logout, planLocked } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -35,7 +35,7 @@ export default function ProfileMenu() {
             <p className="eyebrow">Signed in as</p>
             <p className="text-sm text-ink truncate mt-0.5" title={user.email}>{user.email}</p>
           </div>
-          {!isManaged && (
+          {!isManaged && !planLocked && (
             <button
               onClick={() => { setOpen(false); window.location.hash = '#/pricing'; }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm lowercase text-brass hover:bg-paper3 transition-colors"
@@ -47,7 +47,7 @@ export default function ProfileMenu() {
             onClick={() => { setOpen(false); window.location.hash = '#/account'; }}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm lowercase text-ink2 hover:bg-paper3 transition-colors"
           >
-            <CreditCard size={16} className="text-muted" /> Account &amp; billing
+            <CreditCard size={16} className="text-muted" /> {planLocked ? 'Account' : <>Account &amp; billing</>}
           </button>
           <button
             onClick={() => { setOpen(false); logout(); }}

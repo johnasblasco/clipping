@@ -28,6 +28,8 @@ services:
         condition: service_healthy
     environment:
       - BILLING_ENABLED=true
+      # Every account gets this plan, no Stripe needed ("" restores paid plans)
+      - FORCE_PLAN=${FORCE_PLAN-pro}
       - DATABASE_URL=postgresql+asyncpg://openshorts:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set for cloud mode}@db:5432/openshorts
       - JWT_SECRET=${JWT_SECRET}
       - FRONTEND_URL=${FRONTEND_URL:-https://openshorts.app}

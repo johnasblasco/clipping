@@ -445,6 +445,8 @@ async def is_free_user(session, user_id) -> bool:
     (``free_plan_denied``) still keeps its library on the free 7-day expiry,
     not forever.
     """
+    if config.FORCE_PLAN:
+        return False
     if await _active_subscription(session, user_id):
         return False
     user = await session.get(User, user_id)
@@ -537,7 +539,14 @@ async def _balance(session, user_id, user=None):
     """
     sub_row = await _subscription_row(session, user_id)
     sub = sub_row if _entitles(sub_row) else None
-    if sub:
+    if config.FORCE_PLAN:
+        # Every account is on the forced plan: no Stripe, no free tier. Usage is
+        # still ledgered against a calendar month so reservations keep working.
+        plan_name = config.FORCE_PLAN
+        plan_allowance = _D(config.FORCE_PLAN_MINUTES)
+        period_end = free_period_end()
+        plan_used = await _plan_used_this_period(session, user_id, period_end)
+    elif sub:
         plan_name = sub.plan
         plan_allowance = _D(sub.minutes_per_period)
         # During the trial, cap the allowance so a cancel-before-charge account

@@ -441,6 +441,8 @@ lives in [`examples/n8n/`](examples/n8n/).
 | `LLM_MODEL` | Model name on that server (default `llama3.1:8b`) |
 | `LLM_API_KEY` | Bearer token for that server, if it checks one |
 | `LLM_SCORE_BATCH` | Transcript windows per scoring call (default 3 local, 8 Gemini) |
+| `FORCE_PLAN` | Cloud mode (`BILLING_ENABLED`): every account is on this plan with no Stripe, pricing pages or upgrade prompts. Default `pro`; set to empty to restore paid plans |
+| `FORCE_PLAN_MINUTES` | Monthly minutes under `FORCE_PLAN` (default 1000000, effectively unlimited) |
 
 **Client-side (encrypted in localStorage):**
 | Key | Description |

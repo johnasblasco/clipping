@@ -74,7 +74,9 @@ const FAQItem = ({ question, answer, isOpen, onClick }) => (
 );
 
 export default function Landing({ onLaunchApp }) {
-  const { billingEnabled } = useAuth();
+  const { billingEnabled: billingOn, planLocked } = useAuth();
+  // With a locked plan there is nothing to sell: behave like self-host here.
+  const billingEnabled = billingOn && !planLocked;
   const [openFaq, setOpenFaq] = React.useState(null);
   const [heroUrl, setHeroUrl] = React.useState('');
 

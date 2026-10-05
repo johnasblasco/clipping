@@ -2639,6 +2639,9 @@ async def get_config():
     return {
         "youtubeUrlEnabled": not DISABLE_YOUTUBE_URL,
         "billingEnabled": BILLING_ENABLED,
+        # Every account is on a fixed plan: the dashboard hides pricing,
+        # upgrade and top-up UI (cloud/config.FORCE_PLAN).
+        "planLocked": bool(BILLING_ENABLED and _cloud_config.FORCE_PLAN),
         "googleAuthEnabled": bool(BILLING_ENABLED and cloud.settings.google_auth_enabled),
         "jobRetentionSeconds": JOB_RETENTION_SECONDS,
         # Self-host only: tells the dashboard the Gemini key is optional

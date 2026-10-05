@@ -89,11 +89,14 @@ async def _load_current_user(session, user_id) -> Optional["CurrentUser"]:
     # free monthly allowance (Google-authenticated accounts only).
     free = sub is None and metering.free_plan_eligible(user)
     entitled = bool(sub is not None or topup_remaining > 0 or free)
+    plan = sub.plan if sub else ("free" if free else None)
+    if config.FORCE_PLAN:
+        entitled, plan = True, config.FORCE_PLAN
     return CurrentUser(
         id=user.id,
         email=user.email,
         entitled=entitled,
-        plan=sub.plan if sub else ("free" if free else None),
+        plan=plan,
         upload_post_profile=profile.profile_username if profile else None,
     )
 

@@ -269,7 +269,7 @@ const pollJob = async (jobId) => {
 
 function App() {
   // Cloud auth/billing session (inert when billing is disabled).
-  const { billingEnabled, isManaged, isSignedIn, me, plan, refreshMe, jobRetentionSeconds, localLlm } = useAuth();
+  const { billingEnabled, planLocked, isManaged, isSignedIn, me, plan, refreshMe, jobRetentionSeconds, localLlm } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [showTopUp, setShowTopUp] = useState(false);
   // Free plan: "want the watermark off?" once per job, when the clips land.
@@ -960,7 +960,7 @@ function App() {
   const INCLUDED_TOOL_TABS = ['dashboard', 'thumbnails'];
   const ADVANCED_TOOL_TABS = ['saasshorts', 'ai-agent'];
   const TOOL_NAMES = { dashboard: 'the Clip Generator', thumbnails: 'the YouTube Studio' };
-  const gateThisTab = needsPlan && INCLUDED_TOOL_TABS.includes(activeTab);      // included tool, no plan yet
+  const gateThisTab = needsPlan && !planLocked && INCLUDED_TOOL_TABS.includes(activeTab);      // included tool, no plan yet
   const advancedThisTab = billingEnabled && ADVANCED_TOOL_TABS.includes(activeTab); // BYOK-notice tools
 
   // Social nudge visibility: managed users with clips on screen and no network
@@ -1240,7 +1240,7 @@ function App() {
         <svg height="14" viewBox="0 0 16 16" version="1.1" width="14" aria-hidden="true" fill="currentColor" className="shrink-0"><path fillRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
         <span className={collapsed ? 'hidden lg:block truncate' : 'truncate'}>open source</span>
       </a>
-      {billingEnabled && (
+      {billingEnabled && !planLocked && (
         <a
           href="#/pricing"
           className="flex items-center gap-2 px-3 py-2 text-xs lowercase text-muted hover:text-ink2 transition-colors"
@@ -1458,13 +1458,13 @@ function App() {
             {/* Cloud: minutes meter + account/sign-in. For free users the meter
                 opens the upgrade modal — otherwise the only path to a plan is
                 failing against the quota wall. */}
-            {billingEnabled && isManaged && (
+            {billingEnabled && isManaged && !planLocked && (
               <UsageMeter onClick={() => {
                 if (plan === 'free') { setTopUpInfo({ context: 'upsell' }); setShowTopUp(true); }
                 else { window.location.hash = '#/account'; }
               }} />
             )}
-            {billingEnabled && isSignedIn && !isManaged && (
+            {billingEnabled && isSignedIn && !isManaged && !planLocked && (
               <button onClick={() => setShowPlanChoice(true)}
                 className="btn-primary px-4 py-2 text-xs">
                 Choose a plan
@@ -1591,6 +1591,21 @@ function App() {
                       <Calendar size={16} /> Content calendar
                     </button>
                   </div>
+                </div>
+              ) : billingEnabled && planLocked ? (
+                <div className="card p-6 mb-2">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-input bg-paper3 flex items-center justify-center shrink-0">
+                      <Sparkles size={16} className="text-brass" />
+                    </div>
+                    <h2 className="text-base font-medium text-ink lowercase">Sign in to start</h2>
+                  </div>
+                  <p className="text-xs text-muted mb-5 leading-relaxed">
+                    Every account here is on the Pro plan — no API keys, no billing.
+                  </p>
+                  <button onClick={() => setShowLogin(true)} className="btn-primary py-2 px-4 text-sm">
+                    <Sparkles size={16} /> Sign in
+                  </button>
                 </div>
               ) : billingEnabled ? (
                 <div className="card p-6 mb-2">
@@ -2042,7 +2057,7 @@ function App() {
                         ? 'You are next in line. Starting in a moment…'
                         : <>You are <b>#{queueInfo.position}</b> in line · about <b>{Math.max(1, Math.round(queueInfo.eta_seconds / 60))} min</b></>}
                     </p>
-                    {billingEnabled && !['starter', 'creator', 'pro'].includes(plan) && queueInfo.ahead > 0 && (
+                    {billingEnabled && !planLocked && !['starter', 'creator', 'pro'].includes(plan) && queueInfo.ahead > 0 && (
                       <button
                         onClick={() => { track('QueueUpsellClick', { props: { position: String(queueInfo.position) } }); setShowPlanChoice(true); }}
                         className="mt-2 text-xs lowercase text-brass hover:underline"
@@ -2473,8 +2488,8 @@ function App() {
           onDismissCelebrate={finishTutorial}
         />
       )}
-      {showPlanChoice && <PlanChoiceModal onClose={() => setShowPlanChoice(false)} />}
-      {showWmNotice && (
+      {showPlanChoice && !planLocked && <PlanChoiceModal onClose={() => setShowPlanChoice(false)} />}
+      {showWmNotice && !planLocked && (
         <WatermarkModal
           source="results"
           jobId={jobId}
@@ -2483,7 +2498,7 @@ function App() {
           onClose={() => setShowWmNotice(false)}
         />
       )}
-      {showTopUp && (
+      {showTopUp && !planLocked && (
         <TopUpModal
           onClose={() => setShowTopUp(false)}
           required={topUpInfo.required}
@@ -2493,7 +2508,7 @@ function App() {
           context={topUpInfo.context || 'wall'}
         />
       )}
-      {showTrialUpgrade && (
+      {showTrialUpgrade && !planLocked && (
         <TrialUpgradeModal
           plan={plan}
           onActivated={refreshMe}
